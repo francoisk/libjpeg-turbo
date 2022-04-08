@@ -1,0 +1,43 @@
+intf_libs = # Interface dependencies.
+impl_libs = # Implementation dependencies.
+#import xxxx_libs += libhello%lib{hello}
+
+lib{jpeg}: {h c}{**} $impl_libs $intf_libs
+
+h{export}@./: c.importable = false
+
+# Build options.
+#
+c.poptions =+ "-I$out_root" "-I$src_root"
+
+{hbmia obja}{*}: c.poptions += -DLIBJPEG_STATIC_BUILD
+{hbmis objs}{*}: c.poptions += -DLIBJPEG_SHARED_BUILD
+
+# Export options.
+#
+lib{jpeg}:
+{
+  c.export.poptions = "-I$out_root" "-I$src_root"
+  c.export.libs = $intf_libs
+}
+
+liba{jpeg}: c.export.poptions += -DLIBJPEG_STATIC
+libs{jpeg}: c.export.poptions += -DLIBJPEG_SHARED
+
+# For pre-releases use the complete version to make sure they cannot be used
+# in place of another pre-release or the final version. See the version module
+# for details on the version.* variable values.
+#
+if $version.pre_release
+  lib{jpeg}: bin.lib.version = "-$version.project_id"
+else
+  lib{jpeg}: bin.lib.version = "-$version.major.$version.minor"
+
+# Install into the libjpeg/ subdirectory of, say, /usr/include/
+# recreating subdirectories.
+#
+h{*}:
+{
+  install         = include/libjpeg/
+  install.subdirs = true
+}
