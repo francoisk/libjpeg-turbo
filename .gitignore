@@ -1,3 +1,5 @@
+libjpeg-turbo/jconfig.h
+
 .bdep/
 
 # Local default options files.

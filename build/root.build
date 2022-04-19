@@ -1,6 +1,4 @@
-# Uncomment to suppress warnings coming from external libraries.
-#
-#c.internal.scope = current
+using in
 
 using c
 

@@ -1,0 +1,44 @@
+1. libjpeg vs. libjpeg-turbo vs. TurboJPEG
+
+`libjpeg` AKA `IJG libjpeg` is the original library by the Independent JPEG
+Group.
+
+`libjpeg-turbo` (this package's upstream) was forked from `libjpeg` version 6b
+and, unlike the original, it uses SIMD instructions to accelerate JPEG
+encoding/decoding. It emulates the IJG libjpeg v6b API by default but can also
+emulate the v7 and v8 APIs (see below).
+
+libjpeg-turbo seems to be the most widely-used of the two by quite a margin
+(see https://en.wikipedia.org/wiki/Libjpeg#History for possible explanations)
+which is why it was chosen as this package's upstream.
+
+`TurboJPEG` is a simplified API offered by libjpeg-turbo (in addition to the
+default and most commonly used libjpeg API). See
+https://libjpeg-turbo.org/About/TurboJPEG for more information.
+
+Note that this build2 package does not enable the TurboJPEG API.
+
+2. libjpeg ABI/API emulation
+
+libjpeg v7 and v8 are not ABI-compatible with libjpeg v6b.
+
+libjpeg-turbo can be built to emulate the v6b, v7, or v8 libjpeg APIs/ABIs. It
+defaults to v6b.
+
+According to the libjpeg-turbo upstream README
+(https://github.com/libjpeg-turbo/libjpeg-turbo#libjpeg-v7-and-v8-apiabi-emulation)
+libjpeg v6b is more widely-used than v7/v8. Debian and Fedora use v6b but Arch
+Linux uses v8.
+
+libjpeg-turbo added libjpeg v7/v8 emulation primarily so that programs that
+had already been compiled against those versions of libjpeg could get the
+benefit of libjpeg-turbo's accelerated JPEG encoding/decoding without having
+to be recompiled. libjpeg-turbo also does not support all of the v7+ features
+and might not produce identical output to libjpeg v7+.
+
+For all these reasons this package emulates the v6b API/ABI.
+
+3. TODO when updating this package
+
+- If we decide to package the utilities too, include upstream/usage.txt in the
+  distribution.

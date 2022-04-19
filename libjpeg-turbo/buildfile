@@ -1,0 +1,287 @@
+# @@ TMP Use Windows resource script (upstream/win/jpeg.rc.in)? Looks like
+#    mostly version info, product name, copyright, etc.
+#
+
+linux   = ($c.target.class == 'linux')
+bsd     = ($c.target.class == 'bsd')
+windows = ($c.target.class == 'windows')
+
+# Use a list because many sources files are included instead of compiled.
+#
+src = jaricom   \
+      jcapimin  \
+      jcapistd  \
+      jcarith   \
+      jccoefct  \
+      jccolor   \
+      jcdctmgr  \
+      jchuff    \
+      jcicc     \
+      jcinit    \
+      jcmainct  \
+      jcmarker  \
+      jcmaster  \
+      jcomapi   \
+      jcparam   \
+      jcphuff   \
+      jcprepct  \
+      jcsample  \
+      jctrans   \
+      jdapimin  \
+      jdapistd  \
+      jdarith   \
+      jdatadst  \
+      jdatasrc  \
+      jdcoefct  \
+      jdcolor   \
+      jddctmgr  \
+      jdhuff    \
+      jdicc     \
+      jdinput   \
+      jdmainct  \
+      jdmarker  \
+      jdmaster  \
+      jdmerge   \
+      jdphuff   \
+      jdpostct  \
+      jdsample  \
+      jdtrans   \
+      jerror    \
+      jfdctflt  \
+      jfdctfst  \
+      jfdctint  \
+      jidctflt  \
+      jidctfst  \
+      jidctint  \
+      jidctred  \
+      jquant1   \
+      jquant2   \
+      jutils    \
+      jmemmgr   \
+      jmemnobs
+
+# Add this source file if SIMD is disabled, otherwise add the sources in
+# simd/.
+#
+# @@ TODO Enable SIMD once we are able to compile ASM.
+#
+src += jsimd_none
+
+# Headers and source files.
+#
+lib{jpeg}: libjpeg-turbo/h{**} libjpeg-turbo/c{$src}
+
+# Generated headers.
+#
+lib{jpeg}: h{jconfig} libjpeg-turbo/h{jversion jconfigint}
+
+# Ensure included source files and CMakeLists.txt are distributed.
+#
+lib{jpeg}: libjpeg-turbo/c{** -{$src}}: include = adhoc
+lib{jpeg}: file{CMakeLists.txt}
+
+# Linker version script and module definition files.
+#
+define vsc: file
+vsc{*}: extension = map
+libs{jpeg}: libjpeg-turbo/vsc{libjpeg}: include = ($linux || $bsd ? adhoc : false)
+
+lib{jpeg}: libjpeg-turbo/win/def{jpeg62-memsrcdst}: include = $windows
+
+# Generated headers.
+#
+# See the .in files and CMakeLists.txt for more information about specific
+# variables.
+#
+using autoconf
+
+# Create a numeric version of the project version number. The format is
+# <major><minor><patch> where the minor and patch numbers are left-padded with
+# zeros to three digits. For example, 2.1.3 becomes 2001003.
+#
+vp = $version.patch
+vm = $version.minor
+for i : 0 1
+{
+  if ($size($vp) < 3)
+    vp = "0$vp"
+  if ($size($vm) < 3)
+    vm = "0$vm"
+}
+ver_num = "$version.major$vm$vp"
+
+# The library version (note: not the project version). Use 6.2 because that's
+# the library version used by libjpeg v6b which is the API/ABI we're emulating
+# (see README-DEV).
+#
+# This value is tricky to parse from the upstream build but is unlikely to
+# change so hardcoding it here seems reasonable.
+#
+# @@ TMP The upstream CMakeListst.txt starts with `62` and then splits the
+#    digits using division and mod by 10.
+#
+libver_major = 6
+libver_minor = 2
+
+# The Windows jconfig.h.in has a couple of typedefs at the end that the other
+# one does not.
+#
+if $windows
+{
+  h{jconfig}: libjpeg-turbo/win/in{jconfig}
+  h{jconfig}: in{jconfig}: include = adhoc
+}
+else
+{
+  h{jconfig}: in{jconfig}
+  h{jconfig}: libjpeg-turbo/win/in{jconfig}: include = adhoc
+}
+
+h{jconfig}:
+{
+  # The JPEG library version ID (used, for example, in feature checks).
+  #
+  JPEG_LIB_VERSION = $libver_major$libver_minor
+
+  # The project version number.
+  #
+  LIBJPEG_TURBO_VERSION_NUMBER = $ver_num
+
+  BITS_IN_JSAMPLE = 8
+
+  # WITH_ARITH_DEC and WITH_ARITH_ENC are defined by default in the upstream
+  # build (which causes the variables below to be defined to 1); see
+  # BUILDING.md, section `Arithmetic Coding Support` for details.
+  #
+  # Note: If these are ever disabled, remove c{jaricom jcarith jdarith} from
+  #       the build.
+  #
+  C_ARITH_CODING_SUPPORTED = 1
+  D_ARITH_CODING_SUPPORTED = 1
+
+  # "Include in-memory source/destination manager functions when emulating the
+  # libjpeg v6b or v7 API/ABI". (We do v6b, the upstream default.)
+  #
+  # Note: remember to change def{jpeg62-memsrcdst} to def{jpeg62} above if
+  #       this is ever disabled.
+  #
+  MEM_SRCDST_SUPPORTED = 1
+
+  # Note that this macro controls only types and constants; the SIMD functions
+  # are called unconditionally (there are separate source files for the SIMD
+  # and non-SIMD/no-op implementations).
+  #
+  WITH_SIMD = 0
+
+  # "Define if your (broken) compiler shifts signed values as if they were
+  # unsigned."
+  #
+  RIGHT_SHIFT_IS_UNSIGNED = 0
+
+  # Include the generated header into the distribution (so that we don't pick
+  # up an installed one) and don't remove it when cleaning in src (so that
+  # clean results in a state identical to distributed).
+  #
+  dist = true
+  clean = ($src_root != $out_root)
+}
+
+cmakelists = $src_base/CMakeLists.txt
+
+# Internal library configuration header.
+#
+libjpeg-turbo/h{jconfigint}: libjpeg-turbo/in{jconfigint}
+{
+  # Used as part of the libjpeg version string. The upstream default is
+  # `%Y%m%d`.
+  #
+  BUILD = "$version.snapshot_string"
+
+  # @@ TMP Upstream first tries `__inline` (MSVC) and `__inline__` (rest)
+  #    before `inline`. We probably don't want to support C90 compilers,
+  #    right?
+  #
+  #    They also default to forcing inline (always_inline) enabled.
+  #
+  INLINE = inline
+
+  # This is only used in the TurboJPEG API's implementation, which we disable.
+  #
+  THREAD_LOCAL =
+
+  CMAKE_PROJECT_NAME = $process.run_regex(cat $cmakelists,      \
+                                          'project\((.+) .+',   \
+                                          '\1')
+
+  SIZE_T = 8 # @@ TODO sizeof(size_t)
+
+  # @@ TODO Remove these once autoconf has been staged.
+  #
+  # HAVE_BUILTIN_CTZL = 0
+  # HAVE_INTRIN_H = 1
+}
+
+libjpeg-turbo/h{jversion}: libjpeg-turbo/in{jversion}
+{
+  COPYRIGHT_YEAR = $process.run_regex(cat $cmakelists,                  \
+                                      '.+COPYRIGHT_YEAR "(.+)".+',      \
+                                      '\1')
+}
+
+# Common generated header variables.
+#
+h{jconfig} libjpeg-turbo/h{jconfigint}:
+{
+  autoconf.flavor = cmake
+  VERSION = "$version.major.$version.minor.$version.patch"
+}
+
+h{jconfig} libjpeg-turbo/h{jconfigint jversion}:
+{
+  in.symbol = '@'
+}
+
+libjpeg-turbo/vsc{libjpeg}: libjpeg-turbo/in{libjpeg}
+{
+  # The library version number.
+  #
+  JPEG_LIB_VERSION_DECIMAL = $libver_major.$libver_minor
+
+  MEM_SRCDST_FUNCTIONS =                                        \
+    $process.run_regex(cat $cmakelists,                         \
+                       '.+set\(MEM_SRCDST_FUNCTIONS "(.+)"\)',  \
+                       '\1')
+}
+
+# Build options.
+#
+c.poptions =+ "-I$out_base" "-I$src_base" \
+              "-I$out_base/libjpeg-turbo" "-I$src_base/libjpeg-turbo"
+
+if ($c.id == 'msvc')
+  c.poptions += -D_CRT_NONSTDC_NO_WARNINGS
+elif ($linux || $bsd)
+  c.loptions += "-Wl,--version-script=$out_base/libjpeg-turbo/libjpeg.map"
+
+# Export options.
+#
+lib{jpeg}: c.export.poptions = "-I$out_base" "-I$src_base" \
+                               "-I$src_base/libjpeg-turbo"
+
+# For pre-releases use the complete version to make sure they cannot be used
+# in place of another pre-release or the final version. See the version module
+# for details on the version.* variable values.
+#
+if $version.pre_release
+  lib{jpeg}: bin.lib.version = "-$version.project_id"
+else
+  lib{jpeg}: bin.lib.version = "-$version.major.$version.minor"
+
+# Install public headers directly into, say, /usr/include/.
+#
+h{*}: install = false
+
+h{jconfig}					\
+libjpeg-turbo/h{jerror}@libjpeg-turbo/		\
+libjpeg-turbo/h{jmorecfg}@libjpeg-turbo/	\
+libjpeg-turbo/h{jpeglib}@libjpeg-turbo/: install = include/
