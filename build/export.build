@@ -1,6 +1,6 @@
 $out_root/
 {
-  include libjpeg/
+  include libjpeg-turbo/
 }
 
-export $out_root/libjpeg/$import.target
+export $out_root/libjpeg-turbo/$import.target

@@ -1,4 +1,4 @@
-project = libjpeg
+project = libjpeg-turbo
 
 using version
 using config
