@@ -1,7 +1,6 @@
-./: {*/ -build/ -upstream/}                                             \
-    doc{README.md libjpeg.txt example.txt ChangeLog.md change.log}      \
-    legal{LICENSE.md README.ijg} manifest
-
-# Don't install tests.
+# Glue buildfile that "pulls" all the packages in the project.
 #
-tests/: install = false
+import pkgs = [dir_paths] $process.run_regex(\
+  cat $src_root/packages.manifest, '\s*location\s*:\s*(\S+)\s*', '\1')
+
+./: $pkgs

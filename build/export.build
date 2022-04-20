@@ -1,6 +1,0 @@
-$out_root/
-{
-  include libjpeg-turbo/
-}
-
-export $out_root/libjpeg-turbo/$import.target

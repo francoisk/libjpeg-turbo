@@ -1,3 +1,7 @@
+./: tests/ lib{jpeg}                                                           \
+    doc{README.md libjpeg.txt example.txt ChangeLog.md change.log}      \
+    legal{LICENSE.md README.ijg} manifest
+
 # @@ TMP Use Windows resource script (upstream/win/jpeg.rc.in)? Looks like
 #    mostly version info, product name, copyright, etc.
 #
@@ -285,3 +289,5 @@ h{jconfig}					\
 libjpeg-turbo/h{jerror}@libjpeg-turbo/		\
 libjpeg-turbo/h{jmorecfg}@libjpeg-turbo/	\
 libjpeg-turbo/h{jpeglib}@libjpeg-turbo/: install = include/
+
+tests/: install = false
