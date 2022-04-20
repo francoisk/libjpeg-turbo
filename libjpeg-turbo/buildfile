@@ -1,6 +1,7 @@
-./: tests/ lib{jpeg}                                                           \
+./: lib{jpeg}                                                           \
     doc{README.md libjpeg.txt example.txt ChangeLog.md change.log}      \
-    legal{LICENSE.md README.ijg} manifest
+    legal{LICENSE.md README.ijg} manifest                               \
+    tests/
 
 # @@ TMP Use Windows resource script (upstream/win/jpeg.rc.in)? Looks like
 #    mostly version info, product name, copyright, etc.
