@@ -221,8 +221,8 @@ libjpeg-turbo/h{jconfigint}: libjpeg-turbo/in{jconfigint}
 
   # @@ TODO Remove these once autoconf has been staged.
   #
-  # HAVE_BUILTIN_CTZL = 0
-  # HAVE_INTRIN_H = 1
+  HAVE_BUILTIN_CTZL = 1
+  HAVE_INTRIN_H = 0
 }
 
 libjpeg-turbo/h{jversion}: libjpeg-turbo/in{jversion}
